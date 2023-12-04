@@ -96,116 +96,229 @@ class LoopHandler:
         return response  
 
 
+    # def send_loop_request(self, sent_by_user_id, sent_for_user_id):
+
+    #     sent_for_user_doc = db_client.Users.find_one({"_id": sent_for_user_id})
+    #     if (
+    #         "sent_by_user_id" in sent_for_user_doc.get("blockedUserIds", [])
+    #         or "sent_by_user_id" in sent_for_user_doc.get("blockedByUserIds", [])
+    #     ):
+    #         response = {"message": "You can't send a loop request to this user."}
+    #         response_code = 403
+            
+    #     else:
+    #         existing_request = db_client.LoopRequests.find_one(
+    #             {
+    #                 "createdBy": sent_by_user_id,
+    #                 "createdFor": sent_for_user_id
+    #             }
+    #         )
+
+    #         if existing_request and existing_request.get("status") == "PENDING":
+    #             response = {"message": "You already have a pending loop request."}
+    #             response_code = 400
+
+    #         elif existing_request and existing_request.get("status") == "ACCEPTED":
+    #             response = {"message": "This user is already in your loop."}
+    #             response_code = 200
+            
+    #         elif existing_request and existing_request.get("status") in ["INACTIVE", "REJECTED"]:
+    #             db_client.LoopRequests.update_one(
+    #                 {"_id": existing_request["_id"]},
+    #                 {
+    #                     "$set": {
+    #                         "status": "PENDING",
+    #                         "updatedBy": sent_by_user_id,
+    #                         "updatedOn": datetime.now()
+    #                     }
+    #                 }
+    #             )
+    #             msg=db_client.NotificationContent.find_one({"_id":ObjectId("61c48cd7af2d65aa18e5c5d1")},{"_id":0,"msg":1})
+    #             db_client.Notifications.insert_one({
+    #                 "status": "UNREAD",
+    #                 "notification": msg["msg"],
+    #                 "type": "loop",
+    #                 "key": sent_by_user_doc["key"],
+    #                 "senderId": sent_by_user_id,
+    #                 "receiverId": sent_for_user_id,
+    #                 "senderName": sent_by_user_doc["name"],
+    #                 "reactionType": None,
+    #                 "createdOn": datetime.now()
+    #             })
+    #             response = {"message": "Loop request sent."}
+    #             response_code = 200
+
+    #         else:
+    #             if sent_for_user_doc.get("accessibility") == "PRIVATE":
+    #                 time_now = datetime.now()
+    #                 sent_by_user_doc = db_client.Users.find_one({"_id": sent_by_user_id})
+    #                 db_client.LoopRequests.insert_one(
+    #                     {
+    #                         "createdBy": sent_by_user_id,
+    #                         "createdByName": sent_by_user_doc["name"].lower(),
+    #                         "createdFor": sent_for_user_id,
+    #                         "createdForName": sent_for_user_doc["name"].lower(),
+    #                         "createdOn": time_now,
+    #                         "updatedOn": time_now,
+    #                         "status": "PENDING"
+    #                     }
+    #                 )
+    #                 msg=db_client.NotificationContent.find_one({"_id":ObjectId("61c48cd7af2d65aa18e5c5d1")},{"_id":0,"msg":1})
+    #                 db_client.Notifications.insert_one({
+    #                 "status": "UNREAD",
+    #                 "notification": msg["msg"],
+    #                 "type": "loop",
+    #                 "key":sent_by_user_doc["key"],
+    #                 "senderId": sent_by_user_id,
+    #                 "receiverId": sent_for_user_id,
+    #                 "senderName": sent_by_user_doc["name"],
+    #                 "reactionType": None,
+    #                 # "senderName": sent_by_user_doc["name"],
+    #                 "createdOn": datetime.now()
+    #             })
+    #                 response = {"message": "Loop request sent."}
+    #                 response_code = 200
+    #             elif sent_for_user_doc.get("accessibility") == "PUBLIC":
+    #                 time_now = datetime.now()
+    #                 sent_by_user_doc = db_client.Users.find_one({"_id": sent_by_user_id})
+    #                 db_client.LoopRequests.insert_one(
+    #                     {
+    #                         "createdBy": sent_by_user_id,
+    #                         "createdByName": sent_by_user_doc["name"].lower(),
+    #                         "createdFor": sent_for_user_id,
+    #                         "createdForName": sent_for_user_doc["name"].lower(),
+    #                         "createdOn": time_now,
+    #                         "updatedOn": time_now,
+    #                         "status": "ACCEPTED"
+    #                     }
+    #                 )
+    #                 msg=db_client.NotificationContent.find_one({"_id":ObjectId("61c48d2aaf2d65aa18e5c5d2")},{"_id":0,"msg":1})
+    #                 db_client.Notifications.insert_one({
+    #                 "status": "UNREAD",
+    #                 "notification": msg["msg"],
+    #                 "reactionType": None,
+    #                 "type": "loop",
+    #                 "key":sent_by_user_doc["key"],
+    #                 "senderId": sent_by_user_id,
+    #                 "receiverId": sent_for_user_id,
+    #                 "senderName": sent_by_user_doc["name"],
+    #                 "createdOn": datetime.now()
+    #             })
+    #                 response = {"message": "looped successfully.."}
+    #                 response_code = 200
+
+    #     return response, response_code
+    
     def send_loop_request(self, sent_by_user_id, sent_for_user_id):
-
         sent_for_user_doc = db_client.Users.find_one({"_id": sent_for_user_id})
-        if (
-            "sent_by_user_id" in sent_for_user_doc.get("blockedUserIds", [])
-            or "sent_by_user_id" in sent_for_user_doc.get("blockedByUserIds", [])
-        ):
-            response = {"message": "You can't send a loop request to this user."}
-            response_code = 403
-            
-        else:
-            existing_request = db_client.LoopRequests.find_one(
-                {
-                    "createdBy": sent_by_user_id,
-                    "createdFor": sent_for_user_id
-                }
-            )
 
-            if existing_request and existing_request.get("status") == "PENDING":
-                response = {"message": "You already have a pending loop request."}
-                response_code = 400
-
-            elif existing_request and existing_request.get("status") == "ACCEPTED":
-                response = {"message": "This user is already in your loop."}
-                response_code = 200
-            
-            elif existing_request and existing_request.get("status") in ["INACTIVE", "REJECTED"]:
-                db_client.LoopRequests.update_one(
-                    {"_id": existing_request["_id"]},
+        if sent_for_user_doc:
+            if (
+                "sent_by_user_id" in sent_for_user_doc.get("blockedUserIds", [])
+                or "sent_by_user_id" in sent_for_user_doc.get("blockedByUserIds", [])
+            ):
+                response = {"message": "You can't send a loop request to this user."}
+                response_code = 403
+            else:
+                existing_request = db_client.LoopRequests.find_one(
                     {
-                        "$set": {
-                            "status": "PENDING",
-                            "updatedBy": sent_by_user_id,
-                            "updatedOn": datetime.now()
-                        }
+                        "createdBy": sent_by_user_id,
+                        "createdFor": sent_for_user_id
                     }
                 )
-                msg=db_client.NotificationContent.find_one({"_id":ObjectId("61c48cd7af2d65aa18e5c5d1")},{"_id":0,"msg":1})
-                db_client.Notifications.insert_one({
-                    "status": "UNREAD",
-                    "notification": msg["msg"],
-                    "type": "loop",
-                    "key": sent_by_user_doc["key"],
-                    "senderId": sent_by_user_id,
-                    "receiverId": sent_for_user_id,
-                    "senderName": sent_by_user_doc["name"],
-                    "reactionType": None,
-                    "createdOn": datetime.now()
-                })
-                response = {"message": "Loop request sent."}
-                response_code = 200
 
-            else:
-                if sent_for_user_doc.get("accessibility") == "PRIVATE":
-                    time_now = datetime.now()
-                    sent_by_user_doc = db_client.Users.find_one({"_id": sent_by_user_id})
-                    db_client.LoopRequests.insert_one(
+                if existing_request and existing_request.get("status") == "PENDING":
+                    response = {"message": "You already have a pending loop request."}
+                    response_code = 400
+                elif existing_request and existing_request.get("status") == "ACCEPTED":
+                    response = {"message": "This user is already in your loop."}
+                    response_code = 200
+                elif existing_request and existing_request.get("status") in ["INACTIVE", "REJECTED"]:
+                    db_client.LoopRequests.update_one(
+                        {"_id": existing_request["_id"]},
                         {
-                            "createdBy": sent_by_user_id,
-                            "createdByName": sent_by_user_doc["name"].lower(),
-                            "createdFor": sent_for_user_id,
-                            "createdForName": sent_for_user_doc["name"].lower(),
-                            "createdOn": time_now,
-                            "updatedOn": time_now,
-                            "status": "PENDING"
+                            "$set": {
+                                "status": "PENDING",
+                                "updatedBy": sent_by_user_id,
+                                "updatedOn": datetime.now()
+                            }
                         }
                     )
-                    msg=db_client.NotificationContent.find_one({"_id":ObjectId("61c48cd7af2d65aa18e5c5d1")},{"_id":0,"msg":1})
+                    msg = db_client.NotificationContent.find_one({"_id": ObjectId("61c48cd7af2d65aa18e5c5d1")}, {"_id": 0, "msg": 1})
                     db_client.Notifications.insert_one({
-                    "status": "UNREAD",
-                    "notification": msg["msg"],
-                    "type": "loop",
-                    "key":sent_by_user_doc["key"],
-                    "senderId": sent_by_user_id,
-                    "receiverId": sent_for_user_id,
-                    "senderName": sent_by_user_doc["name"],
-                    "reactionType": None,
-                    # "senderName": sent_by_user_doc["name"],
-                    "createdOn": datetime.now()
-                })
+                        "status": "UNREAD",
+                        "notification": msg["msg"],
+                        "type": "loop",
+                        "key": sent_by_user_doc["key"],
+                        "senderId": sent_by_user_id,
+                        "receiverId": sent_for_user_id,
+                        "senderName": sent_by_user_doc["name"],
+                        "reactionType": None,
+                        "createdOn": datetime.now()
+                    })
                     response = {"message": "Loop request sent."}
                     response_code = 200
-                elif sent_for_user_doc.get("accessibility") == "PUBLIC":
-                    time_now = datetime.now()
-                    sent_by_user_doc = db_client.Users.find_one({"_id": sent_by_user_id})
-                    db_client.LoopRequests.insert_one(
-                        {
-                            "createdBy": sent_by_user_id,
-                            "createdByName": sent_by_user_doc["name"].lower(),
-                            "createdFor": sent_for_user_id,
-                            "createdForName": sent_for_user_doc["name"].lower(),
-                            "createdOn": time_now,
-                            "updatedOn": time_now,
-                            "status": "ACCEPTED"
-                        }
-                    )
-                    msg=db_client.NotificationContent.find_one({"_id":ObjectId("61c48d2aaf2d65aa18e5c5d2")},{"_id":0,"msg":1})
-                    db_client.Notifications.insert_one({
-                    "status": "UNREAD",
-                    "notification": msg["msg"],
-                    "reactionType": None,
-                    "type": "loop",
-                    "key":sent_by_user_doc["key"],
-                    "senderId": sent_by_user_id,
-                    "receiverId": sent_for_user_id,
-                    "senderName": sent_by_user_doc["name"],
-                    "createdOn": datetime.now()
-                })
-                    response = {"message": "looped successfully.."}
-                    response_code = 200
+                else:
+                    if sent_for_user_doc.get("accessibility") == "PRIVATE":
+                        time_now = datetime.now()
+                        sent_by_user_doc = db_client.Users.find_one({"_id": sent_by_user_id})
+                        db_client.LoopRequests.insert_one(
+                            {
+                                "createdBy": sent_by_user_id,
+                                "createdByName": sent_by_user_doc["name"].lower(),
+                                "createdFor": sent_for_user_id,
+                                "createdForName": sent_by_user_doc["name"].lower(),
+                                "createdOn": time_now,
+                                "updatedOn": time_now,
+                                "status": "PENDING"
+                            }
+                        )
+                        msg = db_client.NotificationContent.find_one({"_id": ObjectId("61c48cd7af2d65aa18e5c5d1")}, {"_id": 0, "msg": 1})
+                        db_client.Notifications.insert_one({
+                            "status": "UNREAD",
+                            "notification": msg["msg"],
+                            "type": "loop",
+                            "key": sent_by_user_doc["key"],
+                            "senderId": sent_by_user_id,
+                            "receiverId": sent_for_user_id,
+                            "senderName": sent_by_user_doc["name"],
+                            "reactionType": None,
+                            "createdOn": datetime.now()
+                        })
+                        response = {"message": "Loop request sent."}
+                        response_code = 200
+                    elif sent_for_user_doc.get("accessibility") == "PUBLIC":
+                        time_now = datetime.now()
+                        sent_by_user_doc = db_client.Users.find_one({"_id": sent_by_user_id})
+                        db_client.LoopRequests.insert_one(
+                            {
+                                "createdBy": sent_by_user_id,
+                                "createdByName": sent_by_user_doc["name"].lower(),
+                                "createdFor": sent_for_user_id,
+                                "createdForName": sent_by_user_doc["name"].lower(),
+                                "createdOn": time_now,
+                                "updatedOn": time_now,
+                                "status": "ACCEPTED"
+                            }
+                        )
+                        msg = db_client.NotificationContent.find_one({"_id": ObjectId("61c48d2aaf2d65aa18e5c5d2")}, {"_id": 0, "msg": 1})
+                        db_client.Notifications.insert_one({
+                            "status": "UNREAD",
+                            "notification": msg["msg"],
+                            "reactionType": None,
+                            "type": "loop",
+                            "key": sent_by_user_doc["key"],
+                            "senderId": sent_by_user_id,
+                            "receiverId": sent_for_user_id,
+                            "senderName": sent_by_user_doc["name"],
+                            "createdOn": datetime.now()
+                        })
+                        response = {"message": "Looped successfully."}
+                        response_code = 200
+
+        else:
+            response = {"message": "User not found with the specified _id."}
+            response_code = 404
 
         return response, response_code
 
